@@ -27,9 +27,12 @@ class MultiViewDataSet(Dataset):
             for item in os.listdir(root + '/' + label + '/' + data_type):
                 views = []
                 for view in os.listdir(root + '/' + label + '/' + data_type + '/' + item):
+                    # to use specific orientations, comment out the views appending code below
+                    # and uncomment the if-statement that follows. 
+                    # selected orientation is specified by the selection variable above.
                     views.append(root + '/' + label + '/' + data_type + '/' + item + '/' + view)
+
                     
-                    # selection = [".2.", ".5.", ".8.", ".11."]
                     # if any(sel_view in view for sel_view in selection):
                     #     views.append(root + '/' + label + '/' + data_type + '/' + item + '/' + view)
                     #     views.append(root + '/' + label + '/' + data_type + '/' + item + '/' + view)
