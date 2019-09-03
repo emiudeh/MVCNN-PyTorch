@@ -119,6 +119,11 @@ def train():
     train_size = len(train_loader)
 
     for i, (inputs, targets) in enumerate(train_loader):
+        
+        print("*******************")
+        print(len(inputs))
+        print("*******************")
+
         # Convert from list of 3D to 4D
         inputs = np.stack(inputs, axis=1)
 
@@ -126,6 +131,9 @@ def train():
 
         inputs, targets = inputs.cuda(device), targets.cuda(device)
         inputs, targets = Variable(inputs), Variable(targets)
+
+        
+
 
         # compute output
         outputs = model(inputs)
@@ -202,7 +210,7 @@ for epoch in range(start_epoch, n_epochs):
     # Log epoch to tensorboard
     # See log using: tensorboard --logdir='logs' --port=6006
     util.logEpoch(logger, model, epoch + 1, avg_loss, avg_test_acc)
-
+    print(args.depth)
     # Save model
     if avg_test_acc > best_acc:
         print('\tSaving checkpoint - Acc: %.2f' % avg_test_acc)
