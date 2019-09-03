@@ -120,9 +120,6 @@ def train():
 
     for i, (inputs, targets) in enumerate(train_loader):
         
-        print("*******************")
-        print(len(inputs))
-        print("*******************")
 
         # Convert from list of 3D to 4D
         inputs = np.stack(inputs, axis=1)
