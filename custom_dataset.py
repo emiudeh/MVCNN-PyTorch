@@ -21,17 +21,12 @@ class MultiViewDataSet(Dataset):
         self.transform = transform
         self.target_transform = target_transform
 
-        selection = [".2.", ".5.", ".8.", ".11."]
         # root / <label>  / <train/test> / <item> / <view>.png
         for label in os.listdir(root): # Label
             for item in os.listdir(root + '/' + label + '/' + data_type):
                 views = []
                 for view in os.listdir(root + '/' + label + '/' + data_type + '/' + item):
-                    # selection = [".2.", ".5.", ".8.", ".11."]
-                    if any(sel_view in view for sel_view in selection):
-                        views.append(root + '/' + label + '/' + data_type + '/' + item + '/' + view)
-                        views.append(root + '/' + label + '/' + data_type + '/' + item + '/' + view)
-                        print(view)
+                    views.append(root + '/' + label + '/' + data_type + '/' + item + '/' + view)
 
                 self.x.append(views)
                 self.y.append(self.class_to_idx[label])
