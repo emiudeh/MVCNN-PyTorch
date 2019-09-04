@@ -77,8 +77,8 @@ print('Running on ' + str(device))
 # The above code mostly sets up stuff. Now is the important logic
 ###########
 PATH = "checkpoint/model_from_pete.tar"
-cp = torch.load(PATH)
-model.load_state_dict(cp['state_dict'])
+loaded_model = torch.load(PATH)
+model.load_state_dict(loaded_model['state_dict'])
 model.eval()
 
 correct = 0
