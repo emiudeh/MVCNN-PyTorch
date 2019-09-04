@@ -26,21 +26,8 @@ parser.add_argument('data', metavar='DIR', help='path to dataset')
 parser.add_argument('--depth', choices=[18, 34, 50, 101, 152], type=int, metavar='N', default=18, help='resnet depth (default: resnet18)')
 parser.add_argument('--model', '-m', metavar='MODEL', default=RESNET, choices=MODELS,
                     help='pretrained model: ' + ' | '.join(MODELS) + ' (default: {})'.format(RESNET))
-parser.add_argument('--epochs', default=100, type=int, metavar='N', help='number of total epochs to run (default: 100)')
 parser.add_argument('-b', '--batch-size', default=4, type=int,
                     metavar='N', help='mini-batch size (default: 4)')
-parser.add_argument('--lr', '--learning-rate', default=0.0001, type=float,
-                    metavar='LR', help='initial learning rate (default: 0.0001)')
-parser.add_argument('--momentum', default=0.9, type=float, metavar='M',
-                    help='momentum (default: 0.9)')
-parser.add_argument('--lr-decay-freq', default=30, type=float,
-                    metavar='W', help='learning rate decay (default: 30)')
-parser.add_argument('--lr-decay', default=0.1, type=float,
-                    metavar='W', help='learning rate decay (default: 0.1)')
-parser.add_argument('--print-freq', '-p', default=10, type=int,
-                    metavar='N', help='print frequency (default: 10)')
-parser.add_argument('-r', '--resume', default='', type=str, metavar='PATH',
-                    help='path to latest checkpoint (default: none)')
 parser.add_argument('--pretrained', dest='pretrained', action='store_true', help='use pre-trained model')
 
 args = parser.parse_args()
@@ -57,7 +44,7 @@ device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 
 # Load dataset
 dset_test = MultiViewDataSet(args.data, 'test', transform=transform)
-test_loader = DataLoader(dset_test, batch_size=1, shuffle=False, num_workers=2)
+test_loader = DataLoader(dset_test, batch_size=100, shuffle=False, num_workers=2)
 
 
 if args.model == RESNET:
@@ -78,21 +65,27 @@ else:
     model = mvcnn(pretrained=args.pretrained,num_classes=40)
     print('Using ' + args.model)
 
+
 model.to(device)
 cudnn.benchmark = True
 
 print('Running on ' + str(device))
 
 
+
+
+# The above code mostly sets up stuff. Now is the important logic
 ###########
-PATH = "checkpoint/resnet18_checkpoint.pth.tar"
+PATH = "checkpoint/model_from_pete.tar"
 cp = torch.load(PATH)
 model.load_state_dict(cp['state_dict'])
 model.eval()
 
 correct = 0
+total = 0
+print("we have total of ", len(test_loader), "batches")
 for i, (inputs, targets) in enumerate(test_loader):
-    print("ANOTHER DATA =====================")
+    print("..processing batch", i)
     with torch.no_grad():
         # Convert from list of 3D to 4D
         inputs = np.stack(inputs, axis=1)
@@ -106,17 +99,11 @@ for i, (inputs, targets) in enumerate(test_loader):
         outputs = model(inputs)
         _, predicted = torch.max(outputs.data, 1)
 
-        if (predicted.cpu() == targets.cpu()):
-            correct = correct + 1
+        total += targets.size(0)
+        correct += (predicted.cpu() == targets.cpu()).sum()
 
-        print("*******************")
-        print(i)
-        # print(outputs.data)
-        print("so far:", 100 * correct/(i+1))
-        # print(predicted.cpu())
-        # print(targets.cpu())
-        print("*******************")
+acc = 100 * correct.item() / total
+print("total Accuracy:", acc)
 
 ###########
-
 
