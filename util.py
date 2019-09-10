@@ -20,9 +20,13 @@ def logEpoch(logger, model, epoch, loss, accuracy):
     #for tag, images in info.items():
         #logger.image_summary(tag, images, epoch)
 
-def save_checkpoint(state, model, resnet=None, checkpoint='checkpoint', filename='checkpoint.pth.tar'):
+def save_checkpoint(state, model, resnet=None, casename = "", checkpoint='checkpoint', filename='checkpoint.pth.tar'):
+    filepath = os.path.join(checkpoint, casename)
+    if not os.path.isdir(filepath):
+        os.mkdir(filepath)
     if resnet:
-        filepath = os.path.join(checkpoint, model + str(resnet) + '_' + filename)
+        filepath = os.path.join(checkpoint, casename, model + str(resnet) + '_' + filename)
     else:
-        filepath = os.path.join(checkpoint, model + '_' + filename)
+        filepath = os.path.join(filepath, model + '_' + filename)
+    
     torch.save(state, filepath)
