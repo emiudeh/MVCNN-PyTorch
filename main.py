@@ -2,7 +2,7 @@ from controller_our_case import train_MVCNN
 from test_our_case import test_MVCNN
 
 """Number of different ModelNet40 from which the instances are taken from"""
-NUMBER_CLASSES = 26
+NUMBER_CLASSES = 100
 
 """Number of instances from each class"""
 NUMBER_INSTANCES = 1

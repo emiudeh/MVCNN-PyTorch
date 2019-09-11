@@ -31,7 +31,7 @@ def train_MVCNN(case_description):
     DEPTH = None
     MODEL = MODELS[1]
     EPOCHS = 100
-    BATCH_SIZE = 16
+    BATCH_SIZE = 10
     LR = 0.0001
     MOMENTUM = 0.9
     LR_DECAY_FREQ = 30
@@ -62,14 +62,8 @@ def train_MVCNN(case_description):
     # dset_val = MultiViewDataSet(DATA_PATH, 'test', transform=transform)
     # val_loader = DataLoader(dset_val, batch_size=BATCH_SIZE, shuffle=True, num_workers=2)
 
-    for i, (inputs, targets) in enumerate(train_loader):
-        print("///////////////////////////////////")
-        print(inputs)
-        print("///////////////////////////////////")
-
     classes = dset_train.classes
     print(len(classes), classes)
-    print(dset_train.x)
 
     if MODEL == RESNET:
         if DEPTH == 18:
@@ -115,6 +109,8 @@ def train_MVCNN(case_description):
 
     model.to(device)
 
+    print(model)
+
     logger = Logger('logs')
 
     # Loss and Optimizer
@@ -148,11 +144,6 @@ def train_MVCNN(case_description):
         correct = 0
         for i, (inputs, targets) in enumerate(train_loader):
 
-            print(i)
-            print(inputs)
-            print(targets)
-            
-
             # Convert from list of 3D to 4D
             inputs = np.stack(inputs, axis=1)
 
@@ -170,9 +161,11 @@ def train_MVCNN(case_description):
             total += targets.size(0)
             correct += (predicted.cpu() == targets.cpu()).sum().item()
 
+            """
             print("total: ", total)
             print("correct: ", correct)
             print()
+            """
 
             # compute gradient and do SGD step
             optimizer.zero_grad()
@@ -181,12 +174,15 @@ def train_MVCNN(case_description):
 
             if (i + 1) % PRINT_FREQ == 0:
                 print("\tIter [%d/%d] Loss: %.4f" % (i + 1, train_size, loss.item()))
-        return loss, correct/total
+
+        return loss, int(float(float(correct)/float(total))*100)
 
     # Training / Eval loop
     if RESUME:
         load_checkpoint()
 
+    best_acc = 0
+    best_loss = 0
     loss_values = []
     acc_values = []
     for epoch in range(start_epoch, n_epochs):
@@ -199,19 +195,26 @@ def train_MVCNN(case_description):
         loss_values.append(t_loss)
         acc_values.append(t_acc)
 
+        print("Total loss: " + str(t_loss))
+        print("Accuracy: " + str(t_acc) + "%")
 
         print('Time taken: %.2f sec.' % (time.time() - start))
 
-
-        best_acc = None #set to None
-        best_loss = None #set to None
-        util.save_checkpoint({
-            'epoch': epoch + 1,
-            'state_dict': model.state_dict(),
-            'loss_per_epoch': loss_values,
-            'acc_per_epoch': acc_values,
-            'optimizer': optimizer.state_dict(),
-        }, MODEL, DEPTH, case_description)
+        if t_acc > best_acc:
+            print("UPDATE")
+            print("UPDATE")
+            print("UPDATE")
+            print("UPDATE")
+            print("UPDATE")
+            best_acc = t_acc
+            best_loss = t_loss
+            util.save_checkpoint({
+                'epoch': epoch + 1,
+                'state_dict': model.state_dict(),
+                'loss_per_epoch': loss_values,
+                'acc_per_epoch': acc_values,
+                'optimizer': optimizer.state_dict(),
+            }, MODEL, DEPTH, case_description)
 
         # Decaying Learning Rate
         if (epoch + 1) % LR_DECAY_FREQ == 0:
