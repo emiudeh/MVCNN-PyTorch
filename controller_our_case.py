@@ -12,25 +12,26 @@ import time
 import os
 import matplotlib.pyplot as plt
 
-
-
 from models.resnet import *
 from models.mvcnn import *
 import util
 from logger import Logger
 from custom_dataset_our_case import MultiViewDataSet
 
+import globals
+
 
 def train_MVCNN(case_description):
+    print("\nTrain MVCNN\n")
     MVCNN = 'mvcnn'
     RESNET = 'resnet'
-    MODELS = [RESNET,MVCNN]
+    MODELS = [RESNET, MVCNN]
 
-    DATA_PATH = 'views_our_case/classes'
+    DATA_PATH = globals.DATA_PATH
     DEPTH = None
     MODEL = MODELS[1]
-    EPOCHS = 20
-    BATCH_SIZE = 4
+    EPOCHS = 100
+    BATCH_SIZE = 16
     LR = 0.0001
     MOMENTUM = 0.9
     LR_DECAY_FREQ = 30
@@ -38,7 +39,8 @@ def train_MVCNN(case_description):
     PRINT_FREQ = 10
     RESUME = ""
     PRETRAINED = True
-
+    
+    REMOTE = globals.REMOTE
     case_description = case_description
 
 
@@ -60,8 +62,14 @@ def train_MVCNN(case_description):
     # dset_val = MultiViewDataSet(DATA_PATH, 'test', transform=transform)
     # val_loader = DataLoader(dset_val, batch_size=BATCH_SIZE, shuffle=True, num_workers=2)
 
+    for i, (inputs, targets) in enumerate(train_loader):
+        print("///////////////////////////////////")
+        print(inputs)
+        print("///////////////////////////////////")
+
     classes = dset_train.classes
     print(len(classes), classes)
+    print(dset_train.x)
 
     if MODEL == RESNET:
         if DEPTH == 18:
@@ -78,7 +86,7 @@ def train_MVCNN(case_description):
             raise Exception('Specify number of layers for resnet in command line. --resnet N')
         print('Using ' + MODEL + str(DEPTH))
     else:
-        # number of classes needs to match loaded pre-trained model
+        # number of ModelNet40 needs to match loaded pre-trained model
         model = mvcnn(pretrained=PRETRAINED, num_classes=40)
         print('Using ' + MODEL)
 
@@ -87,9 +95,17 @@ def train_MVCNN(case_description):
 
     print('Running on ' + str(device))
 
-    
-    # Load pre-trained model and freeze weights for training
-    PATH = "checkpoint/model_from_pete.tar"
+    """
+    Load pre-trained model and freeze weights for training.
+    This is done by setting param.requires_grad to False
+    """
+
+    """Just added this check to load my pretrained model instead of copying it to the repo and having a duplicate"""
+    if REMOTE:
+        PATH = "../../MVCNN_Peter/checkpoint/mvcnn18_checkpoint.pth.tar"
+    else:
+        PATH = "checkpoint/model_from_pete.tar"
+
     loaded_model = torch.load(PATH)
     model.load_state_dict(loaded_model['state_dict'])
     for param in model.parameters():
@@ -131,6 +147,10 @@ def train_MVCNN(case_description):
         total = 0
         correct = 0
         for i, (inputs, targets) in enumerate(train_loader):
+
+            print(i)
+            print(inputs)
+            print(targets)
             
 
             # Convert from list of 3D to 4D
@@ -140,8 +160,6 @@ def train_MVCNN(case_description):
 
             inputs, targets = inputs.cuda(device), targets.cuda(device)
             inputs, targets = Variable(inputs), Variable(targets)
-
-            
 
 
             # compute output
@@ -205,5 +223,9 @@ def train_MVCNN(case_description):
     fig.suptitle('Vertically stacked subplots')
     axs[0].plot(loss_values, 'r')
     axs[1].plot(acc_values, 'b')
-    plt.show()
+
+    if not REMOTE:
+        plt.show()
+    else:
+        plt.savefig("plots/training.png")
 

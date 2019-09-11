@@ -19,15 +19,20 @@ import util
 from logger import Logger
 from custom_dataset_our_case import MultiViewDataSet
 
+import globals
+
 def test_MVCNN(test_description):
+    print("\nTest MVCNN\n")
     MVCNN = 'mvcnn'
     RESNET = 'resnet'
     MODELS = [RESNET,MVCNN]
-    DATA_PATH = 'views_our_case/classes'
+    DATA_PATH = globals.DATA_PATH
     DEPTH = 18
     MODEL = MODELS[1]
     PRETRAINED = True
     test_description = test_description
+
+    REMOTE = True if os.uname()[1] == "fry" else False
 
     criterion = nn.CrossEntropyLoss()
 
@@ -45,6 +50,9 @@ def test_MVCNN(test_description):
     dset_test = MultiViewDataSet(DATA_PATH, 'test', transform=transform)
     test_loader = DataLoader(dset_test, batch_size=4, shuffle=False, num_workers=2)
 
+    classes = dset_test.classes
+    print(len(classes), classes)
+
 
     if MODEL == RESNET:
         if DEPTH == 18:
@@ -61,7 +69,7 @@ def test_MVCNN(test_description):
             raise Exception('Specify number of layers for resnet in command line. --resnet N')
         print('Using ' + MODEL + str(DEPTH))
     else:
-        model = mvcnn(pretrained=PRETRAINED, num_classes=4)
+        model = mvcnn(pretrained=PRETRAINED, num_classes=len(classes))
         print('Using ' + MODEL)
 
 
@@ -70,12 +78,9 @@ def test_MVCNN(test_description):
 
     print('Running on ' + str(device))
 
-
-
-
     # The above code mostly sets up stuff. Now is the important logic
     ###########
-    PATH = "checkpoint/5_instances/mvcnn_checkpoint.pth.tar"
+    PATH = "checkpoint/" + test_description + "/mvcnn_checkpoint.pth.tar"
     loaded_model = torch.load(PATH)
     model.load_state_dict(loaded_model['state_dict'])
     model.eval()
@@ -84,11 +89,12 @@ def test_MVCNN(test_description):
     fig.suptitle('Vertically stacked subplots')
     axs[0].plot(loaded_model['loss_per_epoch'], 'r')
     axs[1].plot(loaded_model['acc_per_epoch'], 'b')
-    plt.show()
+    if not REMOTE:
+        plt.show()
 
     correct = 0
     total = 0
-    print("we have total of ", len(test_loader), "batches")
+    print("we have total of ", len(test_loader), " batches")
     for i, (inputs, targets) in enumerate(test_loader):
         print("..processing batch", i)
         with torch.no_grad():

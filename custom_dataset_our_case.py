@@ -22,6 +22,7 @@ class MultiViewDataSet(Dataset):
         self.target_transform = target_transform
 
         selection = [".2.", ".5.", ".8.", ".11."]
+        selection = ["0", "1", "2", "3"]
         # root / <label>  / <train/test> / <item> / <view>.png
         for label in os.listdir(root): # Label
             views = []
@@ -31,7 +32,6 @@ class MultiViewDataSet(Dataset):
                 # selected orientation is specified by the selection variable above.
                 # views.append(root + '/' + label + '/' + data_type + '/' + item + '/' + view)
 
-                
                 if any(sel_view in view for sel_view in selection):
                     views.append(root + '/' + label + '/' + view)
                     print(view)
